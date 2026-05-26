@@ -16,9 +16,26 @@
             align-items: center;
         }
 
-        h1 {
+        /* 編集可能なタイトルのスタイル */
+        h1[contenteditable="true"] {
             color: #2c3e50;
             margin-bottom: 20px;
+            padding: 5px 15px;
+            border-radius: 6px;
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        h1[contenteditable="true"]:hover {
+            background-color: #eef2f5;
+        }
+
+        h1[contenteditable="true"]:focus {
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+            outline: none;
+            cursor: text;
         }
 
         .container {
@@ -183,7 +200,7 @@
             font-size: 20px;
             margin: 5px;
             border: 2px solid #d9383a;
-            animation: pop 0.1s ease-out;
+            animation: pop 0.3s ease-out;
         }
 
         @keyframes pop {
@@ -194,7 +211,7 @@
 </head>
 <body>
 
-    <h1>❌ 教育版MIRA-GE 参加者決定ルーレット ⭕</h1>
+    <h1 contenteditable="true" id="editableTitle">❌⭕ Jochan's ルーレット 🕶️</h1>
 
     <div class="container">
         <div class="input-section">
@@ -232,23 +249,31 @@
         const loserCountInput = document.getElementById('loserCountInput');
         const loserList = document.getElementById('loserList');
         const phaseText = document.getElementById('phaseText');
+        const editableTitle = document.getElementById('editableTitle');
 
         let members = [];
         let currentMembers = [];
         let startAngle = 0;
         let spinTimeout = null;
-        let spinSpeed = 0;        // 現在の回転速度
+        let spinSpeed = 0;        
         
-        let losers = [];          // 確定した外れリスト
-        let maxLosers = 2;        // 最大何人外すか
-        let selectedIndex = -1;   // 現在ルーレットが指しているインデックス
+        let losers = [];          
+        let maxLosers = 2;        
+        let selectedIndex = -1;   
         
-        // 状態管理: 'idle' (初期状態), 'spinning' (高速回転中), 'braking' (減速中), 'stopped' (停止・確定待ち), 'readyNext' (次回準備完了), 'finished' (全工程終了)
         let gameState = 'idle';
 
         // 初期描画
         updateMembersFromInput();
         drawRoulette();
+
+        // タイトル編集時にEnterキーが押されたら確定（改行させない）
+        editableTitle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                editableTitle.blur(); // フォーカスを外して確定
+            }
+        });
 
         // 入力が変わったらルーレットを更新
         nameInput.addEventListener('input', () => {
@@ -373,27 +398,24 @@
             const roundNum = losers.length + 1;
             phaseText.innerHTML = `⚡ ${roundNum}人目の外れを選んでいます（ボタンを押してストップ！）`;
             actionBtn.innerText = "ルーレットを止める！";
-            actionBtn.className = "stop-mode"; // オレンジ色に変更
+            actionBtn.className = "stop-mode"; 
 
-            spinSpeed = Math.random() * 0.2 + 0.3; // 初速を設定
+            spinSpeed = Math.random() * 0.2 + 0.3; 
             animateWheel();
         }
 
         // アニメーションループ処理
         function animateWheel() {
             if (gameState === 'spinning') {
-                // 高速回転中はずっと同じ速度で回る
                 startAngle += spinSpeed;
                 drawRoulette();
                 spinTimeout = setTimeout(animateWheel, 30);
             } else if (gameState === 'braking') {
-                // 減速中（ブレーキ）の処理
                 startAngle += spinSpeed;
-                spinSpeed *= 0.95; // 毎フレーム5%ずつ減速
+                spinSpeed *= 0.95; 
                 drawRoulette();
 
                 if (spinSpeed < 0.002) {
-                    // 完全に止まったら終了処理へ
                     gameState = 'stopped';
                     evaluateWinner();
                 } else {
@@ -404,11 +426,11 @@
 
         // ユーザーが手動で止めるボタンを押したとき
         function stopSpin() {
-            gameState = 'braking'; // 減速状態へ切り替え
-            actionBtn.disabled = true; // 完全に止まるまでボタンを一時無効化
+            gameState = 'braking'; 
+            actionBtn.disabled = true; 
         }
 
-        // ルーレットが停止したあとの判定処理
+        // ルーレットが停止したあ後の判定処理
         function evaluateWinner() {
             clearTimeout(spinTimeout);
             
@@ -422,7 +444,7 @@
             const roundNum = losers.length + 1;
             phaseText.innerHTML = `🎯 矢印が指したのは <b>【${candidate}】</b> さんです！`;
             actionBtn.innerText = `${roundNum}人目の結果を確定する`;
-            actionBtn.className = "confirm-mode"; // 緑色に変更
+            actionBtn.className = "confirm-mode"; 
             actionBtn.disabled = false;
         }
 
