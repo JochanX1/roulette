@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教育版MIRA-GE 参加者決定ルーレット</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .roulette-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex: 1.5;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            resize: none;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea:focus, input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* 停止（ブレーキ）状態のボタンカラー */
+        button.stop-mode {
+            background-color: #f39c12;
+        }
+        button.stop-mode:hover {
+            background-color: #d35400;
+        }
+
+        /* 確定状態のボタンカラー */
+        button.confirm-mode {
+            background-color: #2ecc71;
+        }
+        button.confirm-mode:hover {
+            background-color: #27ae60;
+        }
+
+        /* リセット状態のボタンカラー */
+        button.reset-mode {
+            background-color: #34495e;
+        }
+        button.reset-mode:hover {
+            background-color: #2c3e50;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        /* ルーレットの矢印 */
+        .arrow {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #2c3e50;
+            z-index: 10;
+        }
+
+        canvas {
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .result-container {
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        .loser-box {
+            display: inline-block;
+            background-color: #ffdad7;
+            color: #d9383a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 5px;
+            border: 2px solid #d9383a;
+            animation: pop 0.1s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>❌ 教育版MIRA-GE 参加者決定ルーレット ⭕</h1>
+
+    <div class="container">
+        <div class="input-section">
+            <div class="form-group">
+                <label for="loserCountInput">外す人数（ルーレットの回数）</label>
+                <input type="number" id="loserCountInput" value="2" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="nameInput">メンバーの名前（1行に1人ずつ）</label>
+                <textarea id="nameInput" placeholder="ここに名前を入力してください"></textarea>
+            </div>
+            
+            <button id="actionBtn" onclick="handleButtonClick()">ルーレットを回す！</button>
+        </div>
+
+        <div class="roulette-section">
+            <div class="canvas-container">
+                <div class="arrow"></div>
+                <canvas id="rouletteCanvas" width="350" height="350"></canvas>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <div id="phaseText" style="font-weight: bold; color: #2c3e50; margin-bottom: 10px; font-size: 18px;"></div>
+                <div id="loserList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('rouletteCanvas');
+        const ctx = canvas.getContext('2d');
+        const actionBtn = document.getElementById('actionBtn');
+        const nameInput = document.getElementById('nameInput');
+        const loserCountInput = document.getElementById('loserCountInput');
+        const loserList = document.getElementById('loserList');
+        const phaseText = document.getElementById('phaseText');
+
+        let members = [];
+        let currentMembers = [];
+        let startAngle = 0;
+        let spinTimeout = null;
+        let spinSpeed = 0;        // 現在の回転速度
+        
+        let losers = [];          // 確定した外れリスト
+        let maxLosers = 2;        // 最大何人外すか
+        let selectedIndex = -1;   // 現在ルーレットが指しているインデックス
+        
+        // 状態管理: 'idle' (初期状態), 'spinning' (高速回転中), 'braking' (減速中), 'stopped' (停止・確定待ち), 'readyNext' (次回準備完了), 'finished' (全工程終了)
+        let gameState = 'idle';
+
+        // 初期描画
+        updateMembersFromInput();
+        drawRoulette();
+
+        // 入力が変わったらルーレットを更新
+        nameInput.addEventListener('input', () => {
+            if (gameState === 'idle') {
+                updateMembersFromInput();
+                drawRoulette();
+            }
+        });
+
+        function updateMembersFromInput() {
+            members = nameInput.value.split('\n')
+                .map(name => name.trim())
+                .filter(name => name !== '');
+            currentMembers = [...members];
+            losers = [];
+            selectedIndex = -1;
+            phaseText.innerText = "";
+            loserList.innerHTML = "";
+            actionBtn.innerText = "ルーレットを回す！";
+            actionBtn.className = "";
+            gameState = 'idle';
+        }
+
+        function resetToIdle() {
+            updateMembersFromInput();
+            drawRoulette();
+            nameInput.disabled = false;
+            loserCountInput.disabled = false;
+        }
+
+        // 色の生成
+        function getColor(index, total) {
+            const h = (index * (360 / total)) % 360;
+            return `hsl(${h}, 70%, 65%)`;
+        }
+
+        // ルーレットを描画する
+        function drawRoulette() {
+            const numSegments = currentMembers.length;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (numSegments === 0) {
+                ctx.fillStyle = "#bdc3c7";
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.font = "16px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("名前を入力してください", centerX, centerY);
+                return;
+            }
+
+            const arcSize = (2 * Math.PI) / numSegments;
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = startAngle + i * arcSize;
+                ctx.fillStyle = getColor(i, numSegments);
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize, false);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // テキストの描画
+                ctx.save();
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 4;
+                ctx.font = "bold 14px Arial";
+                ctx.textAlign = "right";
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.fillText(currentMembers[i], radius - 20, 5);
+                ctx.restore();
+            }
+        }
+
+        // ボタンが押されたときの振り分け処理
+        function handleButtonClick() {
+            if (gameState === 'idle' || gameState === 'readyNext') {
+                startSpin();
+            } else if (gameState === 'spinning') {
+                stopSpin();
+            } else if (gameState === 'stopped') {
+                confirmResult();
+            } else if (gameState === 'finished') {
+                resetToIdle();
+            }
+        }
+
+        // ルーレット回転開始
+        function startSpin() {
+            if (gameState === 'idle') {
+                const initialMembers = nameInput.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+                maxLosers = parseInt(loserCountInput.value, 10);
+
+                if (isNaN(maxLosers) || maxLosers < 1) {
+                    alert("外す人数は1人以上を指定してください。");
+                    return;
+                }
+                if (initialMembers.length <= maxLosers) {
+                    alert(`外す人数（${maxLosers}人）は、入力されたメンバーの人数（${initialMembers.length}人）より少なく設定してください。`);
+                    return;
+                }
+
+                updateMembersFromInput();
+                nameInput.disabled = true;
+                loserCountInput.disabled = true;
+            }
+
+            gameState = 'spinning';
+            
+            const roundNum = losers.length + 1;
+            phaseText.innerHTML = `⚡ ${roundNum}人目の外れを選んでいます（ボタンを押してストップ！）`;
+            actionBtn.innerText = "ルーレットを止める！";
+            actionBtn.className = "stop-mode"; // オレンジ色に変更
+
+            spinSpeed = Math.random() * 0.2 + 0.3; // 初速を設定
+            animateWheel();
+        }
+
+        // アニメーションループ処理
+        function animateWheel() {
+            if (gameState === 'spinning') {
+                // 高速回転中はずっと同じ速度で回る
+                startAngle += spinSpeed;
+                drawRoulette();
+                spinTimeout = setTimeout(animateWheel, 30);
+            } else if (gameState === 'braking') {
+                // 減速中（ブレーキ）の処理
+                startAngle += spinSpeed;
+                spinSpeed *= 0.95; // 毎フレーム5%ずつ減速
+                drawRoulette();
+
+                if (spinSpeed < 0.002) {
+                    // 完全に止まったら終了処理へ
+                    gameState = 'stopped';
+                    evaluateWinner();
+                } else {
+                    spinTimeout = setTimeout(animateWheel, 30);
+                }
+            }
+        }
+
+        // ユーザーが手動で止めるボタンを押したとき
+        function stopSpin() {
+            gameState = 'braking'; // 減速状態へ切り替え
+            actionBtn.disabled = true; // 完全に止まるまでボタンを一時無効化
+        }
+
+        // ルーレットが停止したあとの判定処理
+        function evaluateWinner() {
+            clearTimeout(spinTimeout);
+            
+            const numSegments = currentMembers.length;
+            let degrees = (startAngle * 180 / Math.PI) % 360;
+            if (degrees < 0) degrees += 360;
+            
+            selectedIndex = Math.floor(((360 - degrees + 270) % 360) / (360 / numSegments));
+            const candidate = currentMembers[selectedIndex];
+
+            const roundNum = losers.length + 1;
+            phaseText.innerHTML = `🎯 矢印が指したのは <b>【${candidate}】</b> さんです！`;
+            actionBtn.innerText = `${roundNum}人目の結果を確定する`;
+            actionBtn.className = "confirm-mode"; // 緑色に変更
+            actionBtn.disabled = false;
+        }
+
+        // 手動で結果を確定する処理
+        function confirmResult() {
+            const loser = currentMembers[selectedIndex];
+            losers.push(loser);
+
+            const box = document.createElement('div');
+            box.className = 'loser-box';
+            box.innerText = `${losers.length}人目: ${loser} さん`;
+            loserList.appendChild(box);
+
+            currentMembers.splice(selectedIndex, 1);
+            drawRoulette();
+
+            if (losers.length === maxLosers) {
+                gameState = 'finished';
+                phaseText.innerHTML = `🙇😢 以下の${maxLosers}人で確定しました。<br>またの機会にぜひご参加ください。`;
+                actionBtn.innerText = "初期画面に戻る";
+                actionBtn.className = "reset-mode";
+                actionBtn.disabled = false;
+            } else {
+                gameState = 'readyNext';
+                const nextRoundNum = losers.length + 1;
+                phaseText.innerHTML = `☝️ ${losers.length}人目の外れが確定しました。<br>ボタンを押して${nextRoundNum}回目のルーレットを回してください。`;
+                actionBtn.innerText = `${nextRoundNum}回目のルーレットを回す！`;
+                actionBtn.className = "";
+            }
+        }
+    </script>
+</body>
+</html>
