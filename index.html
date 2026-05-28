@@ -412,7 +412,7 @@
                 spinTimeout = setTimeout(animateWheel, 30);
             } else if (gameState === 'braking') {
                 startAngle += spinSpeed;
-                spinSpeed *= 0.95; 
+                spinSpeed *= 0.97; 
                 drawRoulette();
 
                 if (spinSpeed < 0.002) {
