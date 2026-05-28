@@ -396,7 +396,7 @@
             gameState = 'spinning';
             
             const roundNum = losers.length + 1;
-            phaseText.innerHTML = `⚡ ${roundNum}人目の外れを選んでいます（ボタンを押してストップ！）`;
+            phaseText.innerHTML = `⚡ ${roundNum}人目を選んでいます（ボタンを押してストップ！）`;
             actionBtn.innerText = "ルーレットを止める！";
             actionBtn.className = "stop-mode"; 
 
@@ -463,14 +463,14 @@
 
             if (losers.length === maxLosers) {
                 gameState = 'finished';
-                phaseText.innerHTML = `🙇😢 以下の${maxLosers}人で確定しました。<br>またの機会にぜひご参加ください。`;
+                phaseText.innerHTML = ` ✨以下の${maxLosers}人で確定しました。おめでとうございます。✨<br>🙇選ばれなかった生徒はまたの機会にぜひご参加ください。🙇`;
                 actionBtn.innerText = "初期画面に戻る";
                 actionBtn.className = "reset-mode";
                 actionBtn.disabled = false;
             } else {
                 gameState = 'readyNext';
                 const nextRoundNum = losers.length + 1;
-                phaseText.innerHTML = `☝️ ${losers.length}人目の外れが確定しました。<br>ボタンを押して${nextRoundNum}回目のルーレットを回してください。`;
+                phaseText.innerHTML = `☝️ ${losers.length}人目が確定しました。<br>ボタンを押して${nextRoundNum}回目のルーレットを回してください。`;
                 actionBtn.innerText = `${nextRoundNum}回目のルーレットを回す！`;
                 actionBtn.className = "";
             }
